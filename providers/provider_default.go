@@ -3,6 +3,7 @@ package providers
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/url"
@@ -64,11 +65,13 @@ func (p *ProviderData) Redeem(ctx context.Context, redirectURL, code, codeVerifi
 		params.Add("resource", p.ProtectedResource.String())
 	}
 
+	EncodedAuth := base64.StdEncoding.EncodeToString([]byte(p.ClientID + ":" + clientSecret))
 	result := requests.New(p.RedeemURL.String()).
 		WithContext(ctx).
 		WithMethod("POST").
 		WithBody(bytes.NewBufferString(params.Encode())).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
+		SetHeader("Authorization", "Basic "+EncodedAuth).
 		Do()
 	if result.Error() != nil {
 		return nil, result.Error()
